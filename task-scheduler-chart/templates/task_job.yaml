@@ -8,6 +8,6 @@ spec:
       containers:
       - name: task-container
         image: task-scheduler  # Replace with the name of your Docker image
-        command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+        command: ["python", "./main.py"]
       restartPolicy: Never
   backoffLimit: 1
