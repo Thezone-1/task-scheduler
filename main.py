@@ -6,15 +6,18 @@ from database import (
     delete_task_by_id,
     create_task,
     update_task,
-    find_task_definition_by_id,
 )
+
+from fastapi.staticfiles import StaticFiles
 from response import TaskResponse
 from request import TaskRequest
-from models.task import TaskModel
-from schemas.task import TaskCreate, Task, TaskUpdate
+from schemas.task import TaskCreate, TaskUpdate
 from utils.schedule_worker import get_scheduler, decide_next_move
+import uvicorn
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 router_v1 = APIRouter(prefix="/api/v1")
 
 Base.metadata.create_all(bind=engine)  # type: ignore
@@ -30,15 +33,12 @@ async def create_task_api(request: TaskRequest):
         request.task_definition,
     )
     task_id = create_task(task_to_be_created)
-    task = find_task_by_id(task_id)
-    decide_next_move(task)
+    if task_id != -1:
+        task = find_task_by_id(task_id)
+        decide_next_move(task)
+    else:
+        print("could not create task")
     return task_id
-
-
-# Get all posts
-# @app.get("/tasks/", response_model=List[Task])
-# async def read_tasks(db: Session = Depends(get_db)):
-#     return get_tasks(db)
 
 
 # Get one post
@@ -57,7 +57,7 @@ async def read_task(task_id: int):
     return task_response
 
 
-@router_v1.put("/tasks/{task_id}", response_model=int)
+@router_v1.put("/task/{task_id}", response_model=int)
 async def update_task_api(task_id: int, request: TaskRequest):
 
     task_to_be_updated = TaskUpdate(
@@ -84,5 +84,9 @@ async def delete_task_api(task_id: int):
 
 
 app.include_router(router_v1)
-sw = get_scheduler()
-sw.start()
+
+
+if __name__ == "__main__":
+    sw = get_scheduler()
+    sw.start()
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

@@ -1,14 +1,14 @@
 from . import SessionLocal
 from functools import lru_cache
 from sqlalchemy.orm import Session
-from sqlalchemy import select, func
+from sqlalchemy import select, update
 from sqlalchemy.engine.row import Row
 from models.task import TaskModel
 from schemas.task import TaskCreate, Task, TaskUpdate
 from datetime import datetime
+from sqlalchemy.exc import InternalError, InterfaceError
 
 
-@lru_cache
 def get_db() -> Session:
     db: Session = SessionLocal()
     return db
@@ -62,21 +62,42 @@ def find_task_definition_by_id(tid: int):
 def find_next_scheduled_task():
     db = get_db()
 
-    row = db.execute(
-        "SELECT * FROM tasks HAVING execution_time IN (SELECT MIN(execution_time) FROM tasks WHERE execution_time > now())"
-    ).first()
+    try:
 
-    next_task = Task(
-        id=row["id"],
-        name=row["name"],
-        execution_time=row["execution_time"],
-        recurrence_pattern=row["recurrence_pattern"],
-        task_definition=row["task_definition"],
-    )
-    return next_task
+        rowres = db.execute(
+            "SELECT * FROM tasks HAVING execution_time IN (SELECT MIN(execution_time) FROM tasks WHERE execution_time > DATE_SUB(:now, INTERVAL 1 SECOND) AND valid = 1) AND valid = 1",
+            {"now": datetime.now()},
+        )
+        # rowres = db.execute(
+        #     "SELECT * FROM tasks HAVING execution_time IN (SELECT MIN(execution_time) FROM tasks WHERE execution_time > :now)",
+        #     {"now": datetime.now()},
+        # )
+
+        if rowres is None:
+            return None
+
+        row = rowres.first()
+
+        if row is None:
+            return None
+
+        next_task = Task(
+            id=row["id"],
+            name=row["name"],
+            execution_time=row["execution_time"],
+            recurrence_pattern=row["recurrence_pattern"],
+            task_definition=row["task_definition"],
+        )
+        return next_task
+    except InternalError as e:
+        print(e._message)
+        return None
+    except Exception as e:
+        print(e.__cause__)
+        return None
 
 
-def create_task(task: TaskCreate):
+def create_task(task: TaskCreate) -> int:
     db = get_db()
 
     task_model = TaskModel()
@@ -84,10 +105,14 @@ def create_task(task: TaskCreate):
     task_model.execution_time = task.execution_time
     task_model.recurrence_pattern = task.recurrence_pattern
     task_model.task_definition = task.task_definition
-
-    db.add(task_model)
-    db.commit()
-    return task_model.id
+    try:
+        db.add(task_model)
+        db.commit()
+        return task_model.id
+    except InterfaceError as e:
+        print(e._message)
+        db.rollback()
+        return -1
 
 
 def update_task(task: TaskUpdate):
@@ -111,4 +136,16 @@ def delete_task_by_id(task_id: int):
         db.commit()
         return {"message": "Task deleted successfully"}
     else:
+        db.rollback()
         raise Exception("Task not found!!")
+
+
+def invalidate_task(tid: int):
+    db = get_db()
+    stmt = update(TaskModel).where(TaskModel.id == tid).values(valid=False)
+    try:
+        db.execute(stmt)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(e.__cause__)

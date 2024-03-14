@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Scheduler</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <form action="/api/v1/task" method="post" id="task-creation-form">
+      <label for="taskname">Task Name: </label>
+      <input type="text" id="taskname" name="name" />
+      <label for="execution_time">Execution Time: </label>
+      <input type="datetime-local" id="execution_time" name="execution_time" />
+      <label for="recurrence_pattern">Recurrance Pattern: </label>
+      <input type="text" id="recurrence_pattern" name="recurrence_pattern" />
+      <label for="task_definition">Task Definition: </label>
+      <textarea
+        type="text"
+        id="task_definition"
+        name="task_definition"
+      ></textarea>
+      <input type="submit" value="Submit" />
+    </form>
+  </body>
+
+  <script>
+    /** @type {HTMLFormElement} */
+    const submitForm = document.getElementById("task-creation-form");
+
+    submitForm.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      const formData = new FormData(submitForm);
+
+      const payload = {
+        name: formData.get("name"),
+        execution_time: formData.get("execution_time"),
+        recurrence_pattern: formData.get("recurrence_pattern"),
+        task_definition: formData.get("task_definition"),
+      };
+
+      console.log(payload);
+      const resp = await fetch("/api/v1/task", {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+      if (resp.ok) {
+        const data = await resp.text();
+        console.log(data);
+      } else {
+        const err = await resp.json();
+        console.log(err);
+      }
+    });
+  </script>
+</html>
