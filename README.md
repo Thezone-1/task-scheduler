@@ -26,8 +26,20 @@ For running the task scheduler run
 python ./main.py
 ```
 
-To use the task scheduler a basic html form is created which can be accessed from http://localhost:8000/static/index.html
+To use the task scheduler a basic html form is created which can be accessed from ```http://localhost:8000/static/index.html```
 and stores the data and executes the tasks via the fastapi Endpoints.
+
+example form data for the html form:
+```
+Task Name: Task 1
+Execution Time: 14-3-2024 03:39
+Reccurance Pattern: daily
+Task Definition: print("Hello World!!")
+``` 
+
+
+Alternately the api end points can be checked by passing the attributes in the request body.
+
 
 ### Functionality
 
