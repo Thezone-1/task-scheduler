@@ -1,0 +1,16 @@
+# Default values for task-scheduler.
+# Override these values by passing --set key=value to helm install.
+# Or use a separate values file with helm install -f values.yaml
+
+image:
+  repository: task-scheduler/task-scheduler
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  port: 8000
+
+task:
+  id: 1
+  name: "New Task"
+  execution_time: "2025-03-01T12:00:00"
