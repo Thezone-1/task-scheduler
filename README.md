@@ -19,7 +19,7 @@ First setup the environment via activating it and then install the dependencies
 pip install fastapi uvicorn sqlalchemy pymysql
 ```
 
-Connect the database by creating a database v.i.z task_scheduler then the database user and password has to be added in the DATABASE_URL in the database/database_config.py file. Now from the terminal use the task_scheduler database.
+Connect the database by creating a database v.i.z task_scheduler then the database user and password has to be added in the DATABASE_URL in the database/database_config.py file as well as in the docker compose file. Now from the terminal use the task_scheduler database.
 
 For running the task scheduler run
  ```
@@ -37,9 +37,7 @@ Reccurance Pattern: daily
 Task Definition: print("Hello World!!")
 ``` 
 
-
 Alternately the api end points can be checked by passing the attributes in the request body.
-
 
 ### Functionality
 
