@@ -5,11 +5,10 @@ services:
     image: mysql:latest
     environment:
       MYSQL_DATABASE: task_scheduler
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: Somoprovo.01
     ports:
-      - "3306:3306"
+      - "4201:4201"
     volumes:
       - mysql_data:/var/lib/mysql
 
@@ -18,7 +17,7 @@ services:
     depends_on:
       - db
     environment:
-      SQLALCHEMY_DATABASE_URL: mysql+pymysql://root:password@db/task_scheduler
+      SQLALCHEMY_DATABASE_URL: mysql+pymysql://root:Somoprovo.01@localhost:4201/task_scheduler
     ports:
       - "8000:8000"
 
